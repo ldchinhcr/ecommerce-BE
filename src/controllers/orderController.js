@@ -32,6 +32,10 @@ exports.createOrder = catchAsync(async function (req, res, next) {
 
   const { subTotal, discount, total } = countTotalPrice(listProducts);
 
+  if (total > 999999) {
+    return next(new AppError('Your transaction amount is over our limit 999999 $.', 400));
+  }
+
   let listOverAvailability = [];
 
   for (let i = 0; i < listProducts.length; i++) {
@@ -42,23 +46,15 @@ exports.createOrder = catchAsync(async function (req, res, next) {
   }
 
   if (listOverAvailability.length === 0) {
-    for (let i = 0; i < listProducts.length; i++) {
-      const productCurrent = await Product.findById(listProducts[i].color._id);
-      productCurrent.availability = productCurrent.availability - listProducts[i].quantity;
-      await productCurrent.save({validateBeforeSave: false});
-    }
-  } else {
-    return next(new AppError(`Over Availability with: ${listOverAvailability.join(", ")}`, 400))
-  }
 
   const cardToken = await stripe.tokens.create({
-    card: {
-      number: cardInfo.number.split(" ").join(""),
-      name: cardInfo.name,
-      exp_month: cardInfo.month,
-      exp_year: cardInfo.year,
-      cvc: cardInfo.cvc,
-    },
+      card: {
+        number: cardInfo.number.split(" ").join(""),
+        name: cardInfo.name,
+        exp_month: cardInfo.month,
+        exp_year: cardInfo.year,
+        cvc: cardInfo.cvc,
+      },
   });
 
   const payment = await stripe.charges.create({
@@ -87,6 +83,13 @@ exports.createOrder = catchAsync(async function (req, res, next) {
     paid: true,
   });
 
+
+  for (let i = 0; i < listProducts.length; i++) {
+      const productCurrent = await Product.findById(listProducts[i].color._id);
+      productCurrent.availability = productCurrent.availability - listProducts[i].quantity;
+      await productCurrent.save({validateBeforeSave: false});
+  }
+
   const link = `${process.env.CLIENT_DOMAIN}/explore`;
   const namebutton = "Explore";
   const msg = `Your order has been created successfully with id: #${order._id} .\n Thank you!`;
@@ -99,6 +102,9 @@ exports.createOrder = catchAsync(async function (req, res, next) {
     });
 
   res.status(201).json({ status: true, data: order });
+} else {
+  return next(new AppError(`Over Availability with: ${listOverAvailability.join(", ")}`, 400))
+}
 });
 
 const countTotalPrice = (products) => {
