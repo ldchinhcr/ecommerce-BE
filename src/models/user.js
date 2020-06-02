@@ -71,7 +71,7 @@ const schema = mongoose.Schema(
     roles: {
       type: String,
       enum: ["user", "admin"],
-      default: "admin",
+      default: "user",
     },
     socialsOAuth: {
       type: Boolean,
