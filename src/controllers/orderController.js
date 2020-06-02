@@ -39,17 +39,13 @@ exports.createOrder = catchAsync(async function (req, res, next) {
     if (productCurrent.availability < listProducts[i].quantity) {
       listOverAvailability.push(productCurrent.color);
     }
-    break;
   }
 
   if (listOverAvailability.length === 0) {
     for (let i = 0; i < listProducts.length; i++) {
-      const productCurrent = await Product.findOne({_id: listProducts[i].color._id});
-      if (productCurrent.availability < listProducts[i].quantity) {
-        productCurrent.availability = productCurrent.availability - listProducts[i].quantity;
-        await productCurrent.save({validateBeforeSave: false});
-      }
-      break;
+      const productCurrent = await Product.findById(listProducts[i].color._id);
+      productCurrent.availability = productCurrent.availability - listProducts[i].quantity;
+      await productCurrent.save({validateBeforeSave: false});
     }
   } else {
     return next(new AppError(`Over Availability with: ${listOverAvailability.join(", ")}`, 400))
