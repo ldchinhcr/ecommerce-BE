@@ -35,7 +35,7 @@ mongoose.connect(DB_URL, {
 app.use('/auth', authRoute);
 app.use('/users', userRoute);
 app.use('/category', categoriesRoute);
-app.use('/category/:cslug/products/', productsRoute);
+app.use('/category/:cslug/products', productsRoute);
 app.use('/category/:cslug/products/:pslug/reviews', reviewsRoute);
 app.use('/category/:cslug/products/:pslug/:dpslug/buy', paymentRoute);
 app.use('/stats', statsRoute);

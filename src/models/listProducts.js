@@ -83,11 +83,6 @@ schema.methods.toJSON = function () {
 };
 
 schema.pre(/^find/, async function (next) {
-  this.find({"list": {$ne: []}});
-  next();
-});
-
-schema.pre(/^find/, async function (next) {
   this.populate("list", "-__v -createdAt -updatedAt").populate(
     "type",
     "-__v -createdAt -updatedAt"

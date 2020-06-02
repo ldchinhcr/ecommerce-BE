@@ -117,6 +117,7 @@ exports.createOne = (Model) =>
         categoryId = await findIdBySlug(req.params.cslug, Category);
         productId = await findIdBySlug(req.params.pslug, ListProducts);
         const checkColor = await Product.checkColors(productId, req.body.color);
+        console.log(checkColor)
         if (!checkColor) {
           return next(
             new AppError("This color already storage with this product", 400)

@@ -121,7 +121,6 @@ schema.pre(/^find/, async function (next) {
 });
 
 schema.post("findOneAndDelete", async function () {
-  console.log(this._conditions)
   let thisProduct = await ListProducts.findOne({ list: this._conditions._id });
   const index = thisProduct.list.findIndex(id => id === this._conditions._id);
   thisProduct.list.splice(index, 1);
