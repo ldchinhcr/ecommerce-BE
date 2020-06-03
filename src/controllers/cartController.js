@@ -43,7 +43,7 @@ exports.updateCartPopulated = catchAsync(async function (req, res, next) {
 exports.createCart = catchAsync(async function (req, res, next) {
   let product = await Product.findById(req.body.color);
   if (req.body.quantity > product.availability) {
-    return next(new AppError('Over Availability', 400))
+    return next(new AppError('Over Availability', 400));
   }
   let cart = await Cart.findOne({ createdBy: req.user._id });
   if (!cart) {
@@ -53,6 +53,10 @@ exports.createCart = catchAsync(async function (req, res, next) {
     if (index === -1) {
       cart.products = [...cart.products, req.body];
     } else {
+      const checkQuantity = cart.products[index].quantity + req.body.quantity;
+      if (checkQuantity > product.availability) {
+        return next(new AppError('Over Availability', 400));
+      }
       cart.products[index].quantity =
         cart.products[index].quantity + req.body.quantity;
     }
