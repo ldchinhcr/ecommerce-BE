@@ -13,6 +13,7 @@ const reviewsRoute = require('./src/routes/reviewsRoute');
 const paymentRoute = require('./src/routes/paymentRoute');
 const statsRoute = require('./src/routes/statsRoute');
 const cartRoute = require('./src/routes/cartRoute');
+const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -51,7 +52,16 @@ app.all('*', (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-const server = http.createServer(app);
+let server;
+
+if (process.env.NODE_ENV === 'production') {
+  server = http.createServer(app);
+} else {
+  server = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, "./server.key")),
+    cert: fs.readFileSync(path.join(__dirname, "./server.cert"))
+  },app);
+}
 
 process.on('uncaughtException', err => {
     console.log('UNCAUGHT EXCEPTION! 🎆 Shutting down ...')

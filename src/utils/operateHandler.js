@@ -92,7 +92,7 @@ exports.createOne = (Model) =>
     switch (Model.modelName) {
       case "User":
         if (await User.findOne({ email: req.body.email })) {
-          return next(new AppError("Bad request", 400));
+          return next(new AppError("This email already in use!", 400));
         }
         bodyData = filterObj(
           req.body,
