@@ -14,8 +14,6 @@ exports.createOrder = catchAsync(async function (req, res, next) {
     return next(new AppError("Order must contain all required fields", 400));
   }
 
-  const cartWithId = await Cart.findOne({ createdBy: req.user._id });
-
   const cart = await Cart.findOne({ createdBy: req.user._id })
     .populate("products.color")
     .populate("products.product");
@@ -28,11 +26,19 @@ exports.createOrder = catchAsync(async function (req, res, next) {
 
   const listProducts = cart.products.map((product) => product);
 
-  const listColor = cartWithId.products.map(({color, quantity}) => ({color, quantity}))
+  const listProductsOrder = cart.products.map((el) => {
+    return {
+      product: el.product.name,
+      color: el.color.color,
+      price: el.product.price,
+      priceDiscount: el.product.priceDiscount,
+      quantity: el.quantity
+    }
+  });
 
   const { subTotal, discount, total } = countTotalPrice(listProducts);
 
-  if (total > 999999) {
+  if (total*1 > 999999) {
     return next(new AppError('Your transaction amount is over our limit 999999 $.', 400));
   }
 
@@ -46,7 +52,6 @@ exports.createOrder = catchAsync(async function (req, res, next) {
   }
 
   if (listOverAvailability.length === 0) {
-
   const cardToken = await stripe.tokens.create({
       card: {
         number: cardInfo.number.split(" ").join(""),
@@ -74,7 +79,7 @@ exports.createOrder = catchAsync(async function (req, res, next) {
 
   const order = await Order.create({
     user: req.user._id,
-    products: listColor,
+    products: listProductsOrder,
     shipping: infoShipping,
     subTotal: subTotal,
     discount: discount,
@@ -82,7 +87,6 @@ exports.createOrder = catchAsync(async function (req, res, next) {
     paymentID: payment.id,
     paid: true,
   });
-
 
   for (let i = 0; i < listProducts.length; i++) {
       const productCurrent = await Product.findById(listProducts[i].color._id);
@@ -94,14 +98,15 @@ exports.createOrder = catchAsync(async function (req, res, next) {
   const namebutton = "Explore";
   const msg = `Your order has been created successfully with id: #${order._id} .\n Thank you!`;
   const html = verifyHTMLForm(msg, namebutton, link);
-
+  
   await sendEmail({
       email: req.user.email,
       subject: `Order: ${order._id} - Travel Suitcase - Bag Fashion`,
       html,
     });
-
+  
   res.status(201).json({ status: true, data: order });
+
 } else {
   return next(new AppError(`Over Availability with: ${listOverAvailability.join(", ")}`, 400))
 }

@@ -114,8 +114,8 @@ const schema = mongoose.Schema(
 schema.statics.loginWithCredentials = async function(email, password) {
   const user = await User.findOne({email: email.toLowerCase()})
   .populate({ path: "listInSelling", select: "type product color availability slug", populate: {path: "product", select: "_id name price priceDiscount slug imageCover"}})
-  .populate({ path: "listSold", select: "-__v -createdAt -updatedAt", populate: {path: "products.color", select: "product color slug _id", populate: {path: "product", select: "name slug _id -type -list"}}})
-  .populate({ path: "listPurchased", select: "-__v -createdAt -updatedAt", populate: {path: "products.color", select: "product color slug _id", populate: {path: "product", select: "name slug _id -type -list"}}});
+  .populate({ path: "listSold", select: "-__v -createdAt -updatedAt"})
+  .populate({ path: "listPurchased", select: "-__v -createdAt -updatedAt"});
   if (!user) throw new AppError("Email not correct", 401);
   if (!user.password) throw new AppError("Try with login with social networks, and change password", 400);
   const auth = await bcrypt.compare(password.toString(), user.password);

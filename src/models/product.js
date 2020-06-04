@@ -122,16 +122,20 @@ schema.pre(/^find/, async function (next) {
 
 schema.post("findOneAndDelete", async function () {
   let thisProduct = await ListProducts.findOne({ list: this._conditions._id });
-  const index = thisProduct.list.findIndex(id => id === this._conditions._id);
+  const index = thisProduct.list.findIndex(id => id.toString() === this._conditions._id.toString());
+  if (index !== -1) {
   thisProduct.list.splice(index, 1);
   await thisProduct.save({ validateBeforeSave: false });
+  }
 })
 
 schema.post("findOneAndDelete", async function () {
   let thisUser = await User.findOne({ listInSelling: this._conditions._id });
-  const index = thisUser.listInSelling.findIndex(id => id === this._conditions._id);
-  thisUser.listInSelling.splice(index, 1);
-  await thisUser.save({ validateBeforeSave: false });
+  const index = thisUser.listInSelling.findIndex(id => id.toString() === this._conditions._id.toString());
+  if (index !== -1) {
+    thisUser.listInSelling.splice(index, 1);
+    await thisUser.save({ validateBeforeSave: false });
+  }
 })
 
 const Product = mongoose.model("Product", schema);

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const User = require("./user");
+const slugify = require("slugify");
 const Product = require("./product");
 const Cart = require("./cart");
 
@@ -10,10 +11,21 @@ const schema = mongoose.Schema({
         required: [true, 'Order must have a UserId']
     },
     products: [{
+      product: {
+        type: String,
+        required: [true, 'Order must have a product name']
+      },
       color: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-        required: [true, 'Order must have ProductId']
+        type: String,
+        required: [true, 'Product must have color']
+      },
+      price: {
+        type: Number,
+        required: [true, 'Product must have price']
+      },
+      priceDiscount: {
+        type: Number,
+        required: [true, 'Product must have price discount']
       },
       quantity: {
         type: Number,
@@ -87,8 +99,9 @@ schema.post('save', async function () {
 
   schema.post('save', async function () {
       for (let i = 0; i < this.products.length; i++) {
-        const id = this.products[i].color;
-        const thisProduct = await mongoose.model('Product').findById(id);
+        const productRoot = await mongoose.model('ListProducts').findOne({slug: slugify(this.products[i].product, { lower: true })});
+        const slugColor = slugify(this.products[i].color, { lower: true });
+        const thisProduct = await mongoose.model('Product').findOne({product: productRoot._id, slug: slugColor});
         const thisUserSold = await User.findOne({ _id: thisProduct.createdBy});
         const idx = thisUserSold.listSold.findIndex(el => el.toString() == this._id.toString());
         if (idx === -1) {

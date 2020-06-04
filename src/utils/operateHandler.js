@@ -235,9 +235,9 @@ exports.updateOne = (Model) =>
       item = await Model.findOneAndUpdate({ _id: id }, filteredBody, {
         new: true,
         runValidators: true,
-      }).populate("listInSelling", "type product color availability")
-    .populate("listSold", "type product color availability")
-    .populate("listPurschased", "type product color availability");
+      }).populate({ path: "listInSelling", select: "type product color availability slug", populate: {path: "product", select: "_id name price priceDiscount slug imageCover"}})
+      .populate({ path: "listSold", select: "-__v -createdAt -updatedAt"})
+      .populate({ path: "listPurchased", select: "-__v -createdAt -updatedAt"});
     } else {
       item = await Model.findOneAndUpdate({ _id: id }, filteredBody, {
         new: true,
