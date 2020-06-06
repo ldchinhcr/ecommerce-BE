@@ -45,7 +45,7 @@ exports.getAllProductsIncludeEmptyList = catchAsync(async function (req, res, ne
 
 exports.getProductsByCategory = catchAsync(async function (req, res, next) {
   const id = await slugToId(req.params.cslug, Category)
-  const queryObj = {...req.query, type: id, list: {$ne: []}}
+  const queryObj = {...req.query, type: id, list: {$ne: []}};
   const features = new APIFeatures(
     ListProducts.find(),
     queryObj
@@ -56,15 +56,24 @@ exports.getProductsByCategory = catchAsync(async function (req, res, next) {
     .paginate();
   const products = await features.query;
 
+  if (products.length === 0) {
+    return next(new AppError("Nothing to show!", 404));
+  };
+
+  const listEmpty = products.filter(el => el.list.length === 0);
+  if (listEmpty.length !== 0) {
+    for (let i = 0; i < listEmpty.length; i++) {
+      await ListProducts.findOneAndDelete({_id: listEmpty[i]._id});
+    }
+  };
+
   const featuresCount = new APIFeatures(ListProducts.find(), filterObj(queryObj, "page", "limit"))
   .filter()
   .sort()
   .limitFields()
   .paginate();
   const totalProducts = await featuresCount.query;
-  if (products.length === 0) {
-    return next(new AppError("Nothing to show!", 404));
-  }
+
   res
     .status(200)
     .json({ status: true, products: products, totalProducts: totalProducts.length });
@@ -84,7 +93,7 @@ exports.chooseProduct = catchAsync(async function (req, res, next) {
 });
 
 exports.getProducts = catchAsync(async function (req, res, next) {
-  const queryObj = {...req.query, list: {$ne: []}}
+  const queryObj = {...req.query, list : {$ne: []}};
   const features = new APIFeatures(ListProducts.find().populate("type"), queryObj)
     .filter()
     .sort()
@@ -94,6 +103,13 @@ exports.getProducts = catchAsync(async function (req, res, next) {
 
   if (products.length === 0) {
     return next(new AppError("Nothing to show!", 404));
+  }
+
+  const listEmpty = products.filter(el => el.list.length === 0);
+  if (listEmpty.length !== 0) {
+    for (let i = 0; i < listEmpty.length; i++) {
+      await ListProducts.findOneAndDelete({_id: listEmpty[i]._id});
+    }
   }
 
   const featuresCount = new APIFeatures(ListProducts.find({}), filterObj(queryObj, "page", "limit"))
