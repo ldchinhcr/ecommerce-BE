@@ -1,6 +1,6 @@
 # ecommerce-Back End
 
-This BE's project has serve with Node Js run with Express Js Framework and MongoDB as datacenter.
+This BE's project has served with Node Js run with Express Js Framework and MongoDB as datacenter.
 ```
 BE's Features:
 - Bcrypt, Jsonwebtoken
