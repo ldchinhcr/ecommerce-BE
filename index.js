@@ -19,7 +19,24 @@ const fs = require('fs');
 const path = require('path');
 const cors = require("cors");
 
-app.use(cors());
+const CORS_ORIGIN = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['localhost']
+
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    // Add '!origin' condition for not to block REST tools or server-to-server requests
+    if (
+      [...CORS_ORIGIN].indexOf(origin) !== -1 ||
+      !origin
+    ) {
+      callback(null, true)
+    } else {
+      callback(new Error(`Not allowed by CORS: ${origin}`))
+    }
+  }
+}
+app.use(cors(corsOptions));
+
 app.use(mongoSanitize());
 app.use(passport.initialize());
 
